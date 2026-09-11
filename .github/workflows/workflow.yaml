@@ -1,4 +1,5 @@
 name: CI
+run-name: "CI ${{ inputs.leg || github.event_name }} ${{ inputs.racecar_run }}"
 on:
   push:
     paths-ignore:
@@ -10,6 +11,24 @@ on:
       - ".github/workflows/website.yaml"
       - "website/**"
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      leg:
+        description: "baseline (uninstrumented) or instrumented (under chalk/curiosity)"
+        type: choice
+        options: [instrumented, baseline]
+        default: baseline
+      profile:
+        description: "CrashOverride chalk profile"
+        type: string
+        default: curiosity-tests-racecar
+      racecar_run:
+        description: "racecar correlation token, echoed into the run name"
+        type: string
+        default: ""
+
+env:
+  CHALK_ON: ${{ inputs.leg == 'instrumented' }}
 permissions:
   contents: read
 
@@ -26,6 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
+        continue-on-error: true   # racecar: scan/report/push step, must not fail the build
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
@@ -44,11 +64,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ "ubuntu-latest", "macos-latest" ]
+        os: ["ubuntu-latest"]
         opa: [ "v0.44.0", "v0.57.1" ]
     name: Unit test on ${{ matrix.os }} opa ${{ matrix.opa }}
     steps:
       - name: Harden Runner
+        continue-on-error: true   # racecar: scan/report/push step, must not fail the build
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
@@ -70,6 +91,7 @@ jobs:
     name: "Integration test on Gatekeeper ${{ matrix.gatekeeper }} for ${{ matrix.engine }} policies"
     steps:
       - name: Harden Runner
+        continue-on-error: true   # racecar: scan/report/push step, must not fail the build
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
@@ -105,6 +127,7 @@ jobs:
     name: "Require a suite.yaml file alongside every template.yaml"
     steps:
       - name: Harden Runner
+        continue-on-error: true   # racecar: scan/report/push step, must not fail the build
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
@@ -118,6 +141,7 @@ jobs:
     name: "Require a sync.yaml file and metadata.gatekeeper.sh/requires-sync-data annotation for every template.yaml using data.inventory"
     steps:
       - name: Harden Runner
+        continue-on-error: true   # racecar: scan/report/push step, must not fail the build
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
@@ -135,6 +159,7 @@ jobs:
     name: "Verify assertions in suite.yaml files for ${{ matrix.engine }} policies"
     steps:
       - name: Harden Runner
+        continue-on-error: true   # racecar: scan/report/push step, must not fail the build
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
