@@ -11,9 +11,6 @@ on:
       - "library/**"
       - "src/**"
   workflow_dispatch:
-  schedule:
-    # Run weekly on Sundays at midnight
-    - cron: "0 0 * * 0"
 
 permissions:
   contents: write
